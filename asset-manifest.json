@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/beat-forge/static/css/main.3ca7c167.css",
+    "main.js": "/beat-forge/static/js/main.871eed8e.js",
+    "static/js/453.d7446e4a.chunk.js": "/beat-forge/static/js/453.d7446e4a.chunk.js",
+    "index.html": "/beat-forge/index.html",
+    "main.3ca7c167.css.map": "/beat-forge/static/css/main.3ca7c167.css.map",
+    "main.871eed8e.js.map": "/beat-forge/static/js/main.871eed8e.js.map",
+    "453.d7446e4a.chunk.js.map": "/beat-forge/static/js/453.d7446e4a.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.3ca7c167.css",
+    "static/js/main.871eed8e.js"
+  ]
+}
