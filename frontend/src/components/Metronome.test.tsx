@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Metronome from './Metronome';
+import { usePracticeHistoryStore } from '@/store/practiceHistoryStore';
 
 // Mock Web Audio API
 const mockAudioContext = {
@@ -44,6 +45,8 @@ describe('Metronome component', () => {
     jest.clearAllMocks();
     (window.AudioContext as jest.Mock).mockImplementation(() => mockAudioContext);
     ((window as any).webkitAudioContext as jest.Mock).mockImplementation(() => mockAudioContext);
+    usePracticeHistoryStore.setState({ sessions: [] });
+    window.localStorage.clear();
   });
 
   test('renders initial state correctly', () => {
@@ -95,5 +98,36 @@ describe('Metronome component', () => {
 
     const triggerAfterClick = await screen.findByText('Eighth');
     expect(triggerAfterClick).toBeInTheDocument();
+  });
+
+  test('records a practice session when stopped after several seconds', async () => {
+    const dateNowSpy = jest.spyOn(Date, 'now').mockReturnValue(1_000_000);
+
+    render(<Metronome />);
+    await userEvent.click(screen.getByRole('button', { name: 'Start' }));
+
+    dateNowSpy.mockReturnValue(1_000_000 + 5000);
+    await userEvent.click(screen.getByRole('button', { name: 'Stop' }));
+
+    const { sessions } = usePracticeHistoryStore.getState();
+    expect(sessions).toHaveLength(1);
+    expect(sessions[0]).toMatchObject({
+      startedAt: 1_000_000,
+      endedAt: 1_000_000 + 5000,
+      startTempo: 120,
+      endTempo: 120,
+      timeSignature: '4/4',
+      subdivision: 'Quarter',
+    });
+
+    dateNowSpy.mockRestore();
+  });
+
+  test('does not record a session shorter than the minimum duration', async () => {
+    render(<Metronome />);
+    await userEvent.click(screen.getByRole('button', { name: 'Start' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Stop' }));
+
+    expect(usePracticeHistoryStore.getState().sessions).toHaveLength(0);
   });
 });
