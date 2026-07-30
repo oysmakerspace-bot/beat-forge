@@ -13,6 +13,12 @@ const mockAudioContext = {
       setValueAtTime: jest.fn(),
     },
   })),
+  createGain: jest.fn(() => ({
+    connect: jest.fn(),
+    gain: {
+      setValueAtTime: jest.fn(),
+    },
+  })),
   suspend: jest.fn(),
   resume: jest.fn(),
   currentTime: 0,
@@ -33,8 +39,11 @@ Object.defineProperty(window, 'webkitAudioContext', {
 
 describe('Metronome component', () => {
   beforeEach(() => {
-    // Clear mocks before each test
+    // CRA's Jest config runs with resetMocks: true, which strips
+    // mockImplementation before every test, so it must be re-armed here.
     jest.clearAllMocks();
+    (window.AudioContext as jest.Mock).mockImplementation(() => mockAudioContext);
+    ((window as any).webkitAudioContext as jest.Mock).mockImplementation(() => mockAudioContext);
   });
 
   test('renders initial state correctly', () => {
