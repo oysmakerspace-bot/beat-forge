@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { usePracticeHistoryStore } from '@/store/practiceHistoryStore';
 
 const SUBDIVISION_CLICKS_PER_BEAT: Record<string, number> = {
   Quarter: 1,
@@ -29,6 +30,8 @@ const Metronome: React.FC = () => {
   const nextClickTimeRef = useRef(0);
   const currentClickRef = useRef(0);
   const visualTimeoutsRef = useRef<number[]>([]);
+  const sessionStartRef = useRef<{ startedAt: number; startTempo: number } | null>(null);
+  const addSession = usePracticeHistoryStore((s) => s.addSession);
 
   const beatsPerBar = parseInt(timeSignature.split('/')[0], 10);
   const clicksPerBeat = SUBDIVISION_CLICKS_PER_BEAT[subdivision] ?? 1;
@@ -106,6 +109,7 @@ const Metronome: React.FC = () => {
       currentClickRef.current = 0;
       nextClickTimeRef.current = audioContextRef.current.currentTime + 0.05;
       schedulerIdRef.current = window.setInterval(schedulerTick, SCHEDULER_INTERVAL);
+      sessionStartRef.current = { startedAt: Date.now(), startTempo: tempo };
     } else {
       if (schedulerIdRef.current !== null) {
         clearInterval(schedulerIdRef.current);
@@ -116,6 +120,17 @@ const Metronome: React.FC = () => {
       setBeat(false);
       if (audioContextRef.current) {
         audioContextRef.current.suspend();
+      }
+      if (sessionStartRef.current) {
+        addSession({
+          startedAt: sessionStartRef.current.startedAt,
+          endedAt: Date.now(),
+          startTempo: sessionStartRef.current.startTempo,
+          endTempo: tempo,
+          timeSignature,
+          subdivision,
+        });
+        sessionStartRef.current = null;
       }
     }
     return () => {
